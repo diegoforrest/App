@@ -1,0 +1,2 @@
+C:/Users/legas/OneDrive/Desktop/CLIENTS/2025/JANUARY/Paddy Scan/App/android/app/.cxx/Debug/2z6u2ez3/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/legas/OneDrive/Desktop/CLIENTS/2025/JANUARY/Paddy Scan/App/android/app/.cxx/Debug/2z6u2ez3/x86_64/CMakeFiles/rebuild_cache.dir
