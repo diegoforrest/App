@@ -5,6 +5,7 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:flutter/services.dart'; // Import this at the top
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({Key? key}) : super(key: key);
@@ -105,6 +106,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
               : daysToAdd),
       _selectedTime!.hour,
       _selectedTime!.minute,
+
     );
 
     final androidDetails = AndroidNotificationDetails(
@@ -131,8 +133,13 @@ class _NotificationScreenState extends State<NotificationScreen> {
       matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
     );
 
-    _saveNotification(id);
-
+    await _saveNotification(id);
+    setState(() {
+      _nameController.clear();
+      _descriptionController.clear();
+      _selectedDay = null; // Reset day selection
+      _selectedTime = null; // Reset time selection
+    });
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Weekly notification scheduled')),
     );
@@ -142,20 +149,36 @@ class _NotificationScreenState extends State<NotificationScreen> {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final List<String> days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
+    final String newTitle = _nameController.text.isNotEmpty ? _nameController.text : 'Paddy Reminder';
+
+    // Check if a notification with the same title already exists
+    final existingIndex = _scheduledNotifications.indexWhere((notif) => notif['title'] == newTitle);
+
     final Map<String, dynamic> newNotification = {
       'id': id,
-      'title': _nameController.text.isNotEmpty ? _nameController.text : 'Paddy Reminder',
+      'title': newTitle,
       'description': _descriptionController.text.isNotEmpty ? _descriptionController.text : 'Reminder notification',
-      'day': days[_selectedDay! - 1],  // Convert day index to string
+      'day': days[_selectedDay! - 1], // Convert day index to string
       'time': _selectedTime!.format(context),
     };
 
     setState(() {
-      _scheduledNotifications.add(newNotification);
+      if (existingIndex != -1) {
+        // If the title already exists, update the existing notification
+        _scheduledNotifications[existingIndex] = newNotification;
+      } else {
+        // Otherwise, add a new notification
+        _scheduledNotifications.add(newNotification);
+      }
     });
 
     await prefs.setString('notifications', jsonEncode(_scheduledNotifications));
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(existingIndex != -1 ? 'Notification updated' : 'Notification saved')),
+    );
   }
+
 
   void _updateNotification(int index) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -274,71 +297,181 @@ class _NotificationScreenState extends State<NotificationScreen> {
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green,
-        title: const Text('Notification', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Paddy Notification',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
+        actions: [
+          Padding(
+            padding: EdgeInsets.only(right: 15),
+            child: TextButton(
+              onPressed: _scheduleWeeklyNotification,
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+              ),
+              child: Text(
+                'Save',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.0,
+                  color: Color(0xFFFFFFFF), // Gold-like color
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
+
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Name'),
+              decoration: InputDecoration(
+                labelText: 'Title',
+                labelStyle: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.green, // Stylish label color
+                ),
+                filled: true,
+                fillColor: Colors.grey[200], // Light background for a soft look
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12), // Rounded corners
+                  borderSide: BorderSide.none, // No harsh border
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.green, width: 2), // Highlight on focus
+                ),
+                contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 15), // Spacing inside
+                prefixIcon: Icon(Icons.title, color: Colors.green), // Icon for better UX
+              ),
             ),
-            const SizedBox(height: 10),
+
+            const SizedBox(height: 15),
             TextField(
               controller: _descriptionController,
-              maxLines: 3,
-              decoration: const InputDecoration(labelText: 'Description'),
+              maxLines: 3, // Allows multiline input
+              decoration: InputDecoration(
+                labelText: 'Description',
+                labelStyle: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.green, // Stylish label color
+                ),
+                filled: true,
+                fillColor: Colors.grey[200], // Light background for a soft look
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12), // Rounded corners
+                  borderSide: BorderSide.none, // No harsh border
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.green, width: 2), // Highlight on focus
+                ),
+                contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 15), // Spacing inside
+                prefixIcon: Icon(Icons.description, color: Colors.green), // Adds an icon for UX
+              ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 15),
 
-            // Day Picker
-            DropdownButton<int>(
-              hint: const Text("Select a day"),
-              value: _selectedDay,
-              onChanged: (int? newValue) {
-                setState(() {
-                  _selectedDay = newValue;
-                });
-              },
-              items: List.generate(7, (index) {
-                return DropdownMenuItem<int>(
-                  value: index + 1,
-                  child: Text(
-                    ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][index],
+
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 30), // More space on left & right
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween, // Keeps them apart
+                children: [
+                  // Day Picker (Left)
+                  Container(
+                    width: 160,
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.green.shade700, width: 1.5),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<int>(
+                        hint: Text(
+                          "Select Day",
+                          style: TextStyle(fontSize: 14, color: Colors.grey.shade700, fontWeight: FontWeight.w500),
+                        ),
+                        value: _selectedDay,
+                        isExpanded: false,
+                        dropdownColor: Colors.white,
+                        icon: Icon(Icons.keyboard_arrow_down, color: Colors.green.shade700, size: 20),
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black),
+                        onChanged: (int? newValue) {
+                          setState(() {
+                            _selectedDay = newValue;
+                          });
+                        },
+                        items: List.generate(7, (index) {
+                          return DropdownMenuItem<int>(
+                            value: index + 1,
+                            child: Text(
+                              ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][index],
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
                   ),
-                );
-              }),
+
+                  // Time Picker (Right)
+                  Container(
+                    width: 160,
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.green.shade700, width: 1.5),
+                    ),
+                    child: TextButton(
+                      onPressed: _pickTime,
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        alignment: Alignment.centerLeft,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _selectedTime == null ? "Select Time" : _selectedTime!.format(context),
+                            style: TextStyle(fontSize: 14, color: Colors.grey.shade700, fontWeight: FontWeight.w500),
+                          ),
+                          Icon(Icons.access_time, color: Colors.green.shade700, size: 20),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
 
-            const SizedBox(height: 10),
 
-            // Time Picker
-            ElevatedButton(
-              onPressed: _pickTime,
-              child: Text(_selectedTime == null
-                  ? "Select Time"
-                  : "Time: ${_selectedTime!.format(context)}"),
+            SizedBox(height: 25),
+
+            Align(
+              alignment: Alignment.centerLeft, // Aligns text to the left
+              child: Text(
+                'Alarms',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
             ),
 
-            const SizedBox(height: 20),
 
-            ElevatedButton(
-              onPressed: _scheduleWeeklyNotification,
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              child: const Text('Save', style: TextStyle(color: Colors.white)),
-            ),
-
-            const SizedBox(height: 20),
-            const Divider(),
-
-            const Text('Scheduled Notifications', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
 
             Expanded(
               child: ListView.builder(
@@ -346,19 +479,129 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 itemBuilder: (context, index) {
                   final notif = _scheduledNotifications[index];
 
-                  return ListTile(
-                    title: Text(notif['title']),
-                    subtitle: Text('${notif['description']}\n${notif['day']}, ${notif['time']}'),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _deleteNotification(notif['id']),
-                    ),
-                    onTap: () => _editNotification(context, index), // Open edit dialog on tap
+                  return Column(
+                    children: [
+                      // Divider before the first item
+                      if (index == 0) Divider(color: Colors.black, thickness: 1),
+
+                      Dismissible(
+                        key: Key(notif['id'].toString()), // Unique key for each item
+                        direction: DismissDirection.endToStart, // Swipe left to delete
+                        background: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Colors.red.shade900, Color(0xFFF33930)], // Dark red to bright red
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                          ),
+                          alignment: Alignment.centerRight,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(width: 8),
+                              Text(
+                                "Delete",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        onDismissed: (direction) {
+                          _deleteNotification(notif['id']); // Call delete function
+                        },
+                        child: GestureDetector(
+                          onLongPress: () {
+                            // Haptic feedback for better UX
+                            HapticFeedback.mediumImpact();
+
+                            // Open edit dialog after 1 second
+                            Future.delayed(Duration(seconds: 1), () {
+                              _editNotification(context, index);
+                            });
+
+                            // Show feedback to user
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Hold to edit...")),
+                            );
+                          },
+                          child: ListTile(
+                            contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                            title: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                RichText(
+                                  text: TextSpan(
+                                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.black),
+                                    children: [
+                                      TextSpan(
+                                        text: notif['time'].split(' ')[0], // Extract time
+                                        style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+                                      ),
+                                      TextSpan(
+                                        text: ' ${notif['time'].split(' ')[1]}', // AM/PM
+                                        style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Text(notif['day'], style: TextStyle(fontSize: 16, color: Colors.grey.shade700)),
+                                SizedBox(height: 2),
+                                Text(notif['description'], style: TextStyle(fontSize: 14, color: Colors.grey.shade700)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Divider after each notification
+                      Divider(color: Colors.black, thickness: 1),
+                    ],
                   );
                 },
-
               ),
             ),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           ],
         ),
       ),
