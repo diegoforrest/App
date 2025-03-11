@@ -1,0 +1,2 @@
+D:/PaddyScan/App/android/app/.cxx/Debug/06r1h124/x86/CMakeFiles/edit_cache.dir
+D:/PaddyScan/App/android/app/.cxx/Debug/06r1h124/x86/CMakeFiles/rebuild_cache.dir

@@ -387,7 +387,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
 
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 30), // More space on left & right
+              padding: EdgeInsets.symmetric(horizontal: 10), // More space on left & right
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween, // Keeps them apart
                 children: [
@@ -430,6 +430,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   ),
 
                   // Time Picker (Right)
+
                   Container(
                     width: 160,
                     padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),

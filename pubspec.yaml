@@ -79,10 +79,20 @@ flutter:
     - assets/images/PaddyScanned.png
     - assets/models/rice_model/rice_mobnetv2_model.tflite
     - assets/models/rice_model/rice_inception_model.tflite
+    - assets/models/rice_model/rice_cnn_model.tflite
+    - assets/models/rice_model/rice_dense_net_model.tflite
+    - assets/models/rice_model/rice_vgg_model.tflite
+    - assets/models/rice_model/rice_Xception_model.tflite
     - assets/models/rice_model/rice_label.txt
     - assets/models/rice_status_model/rice_status_mobnetv2.tflite
+    - assets/models/rice_status_model/rice_status_cnn_model.tflite
+    - assets/models/rice_status_model/rice_status_dense_net_model.tflite
+    - assets/models/rice_status_model/rice_status_inception_model.tflite
+    - assets/models/rice_status_model/rice_status_NASNetMobile_model.tflite
     - assets/models/rice_status_model/rice_status_vgg.tflite
     - assets/models/rice_status_model/status_rice.txt
+
+
 
   # To add assets to your application, add an assets section, like this:
   # assets:
