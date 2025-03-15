@@ -23,7 +23,7 @@
 				}
 			],
 			"type" : "UNINITIALIZED",
-			"value" : "D:\\Sdk\\ndk\\25.1.8937393"
+			"value" : "D:\\sdk\\ndk\\25.1.8937393"
 		},
 		{
 			"name" : "ANDROID_PLATFORM",
@@ -75,7 +75,7 @@
 				}
 			],
 			"type" : "UNINITIALIZED",
-			"value" : "D:\\Sdk\\ndk\\25.1.8937393"
+			"value" : "D:\\sdk\\ndk\\25.1.8937393"
 		},
 		{
 			"name" : "CMAKE_AR",
@@ -779,7 +779,7 @@
 				}
 			],
 			"type" : "UNINITIALIZED",
-			"value" : "D:\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe"
+			"value" : "D:\\sdk\\cmake\\3.22.1\\bin\\ninja.exe"
 		},
 		{
 			"name" : "CMAKE_MODULE_LINKER_FLAGS",
