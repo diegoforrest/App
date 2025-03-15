@@ -8,12 +8,12 @@ class RiceMobnetDetector {
   List<String> _labels = [];
 
   Future<void> loadModel() async {
-     _interpreter = await Interpreter.fromAsset(
+      _interpreter = await Interpreter.fromAsset(
          'assets/models/rice_model/rice_mobnetv2_model.tflite');
    // _interpreter = await Interpreter.fromAsset(
-    //    'assets/models/rice_model/rice_inception_model.tflite');
-   //  _interpreter = await Interpreter.fromAsset(
-   //      'assets/models/rice_model/rice_cnn_model.tflite');
+     //   'assets/models/rice_model/rice_inception_model.tflite');
+    //  _interpreter = await Interpreter.fromAsset(
+   //     'assets/models/rice_model/rice_cnn_model.tflite');
    //  _interpreter = await Interpreter.fromAsset(
     //     'assets/models/rice_model/rice_dense_net_model.tflite');
     // _interpreter = await Interpreter.fromAsset(
