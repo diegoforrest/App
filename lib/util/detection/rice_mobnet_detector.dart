@@ -8,8 +8,8 @@ class RiceMobnetDetector {
   List<String> _labels = [];
 
   Future<void> loadModel() async {
-     _interpreter = await Interpreter.fromAsset(
-         'assets/models/rice_model/rice_mobnetv2_model.tflite');
+   //  _interpreter = await Interpreter.fromAsset(
+     //    'assets/models/rice_model/rice_mobnetv2_model.tflite');
    // _interpreter = await Interpreter.fromAsset(
     //    'assets/models/rice_model/rice_inception_model.tflite');
    //  _interpreter = await Interpreter.fromAsset(
@@ -18,8 +18,8 @@ class RiceMobnetDetector {
     //     'assets/models/rice_model/rice_dense_net_model.tflite');
     // _interpreter = await Interpreter.fromAsset(
     //     'assets/models/rice_model/rice_vgg_model.tflite');
-   //  _interpreter = await Interpreter.fromAsset(
-    //     'assets/models/rice_model/rice_Xception_model.tflite');
+     _interpreter = await Interpreter.fromAsset(
+         'assets/models/rice_model/rice_Xception_model.tflite');
 
     final labelsData =
         await rootBundle.loadString('assets/models/rice_model/rice_label.txt');
