@@ -235,21 +235,23 @@ class _ScanScreenState extends State<ScanScreen> {
         title: const Text('Scan', style: TextStyle(color: Colors.green)),
         elevation: 0.0,
       ),
-      body: Container(
-        color: Colors.grey[300],
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              GestureDetector(
-                onTap: _image != null
-                    ? _resetImage
-                    : getImage, // Open Camera/Gallery
-                child: _image == null
-                    ? Image.asset('assets/images/TapToOpenCam.png', height: 500)
-                    : Image.file(_image!, height: 500, fit: BoxFit.fitHeight),
-              ),
-              const SizedBox(height: 20),
+    body: GestureDetector(
+    onTap: getImage, // Tap anywhere to trigger image selection
+    child: Container(
+    color: Colors.grey[300],
+    width: double.infinity,
+    height: double.infinity, // Ensure the entire screen is tappable
+    child: Center(
+    child: Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: <Widget>[
+    GestureDetector(
+    onTap: _image != null ? _resetImage : getImage, // Tap on image area
+    child: _image == null
+    ? Image.asset('assets/images/TapToOpenCam.png', height: 500)
+        : Image.file(_image!, height: 500, fit: BoxFit.fitHeight),
+    ),
+    const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _image != null
                     ? () async {
@@ -302,6 +304,9 @@ class _ScanScreenState extends State<ScanScreen> {
           ),
         ),
       ),
+    )
     );
+
+
   }
 }
