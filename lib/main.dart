@@ -42,6 +42,7 @@ class MyApp extends StatelessWidget {
         '/save_to_records': (context) => SaveToRecordsScreen(),
         '/records': (context) => RecordsScreen(),
         '/notification': (context) => NotificationScreen(), // Add this
+
       },
     );
   }

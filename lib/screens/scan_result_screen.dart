@@ -27,6 +27,11 @@ class ScanResultScreen extends StatelessWidget {
           'Result',
           style: TextStyle(color: Colors.white), // White text
         ),
+        leading: BackButton(
+          onPressed: () {
+            Navigator.pushReplacementNamed(context, '/scan');
+          },
+        ),
         centerTitle: true,
         elevation: 0,
       ),

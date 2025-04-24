@@ -42,15 +42,55 @@ class _RecordsScreenState extends State<RecordsScreen> {
     }
     return records;
   }
-
   Future<void> _deleteRecord(int id) async {
-    await _databaseHelper.deleteRecord(id);
-    _loadRecords(); // Refresh the record list
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Record'),
+        content: const Text('Are you sure you want to delete this record?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await _databaseHelper.deleteRecord(id);
+      _loadRecords(); // Refresh the record list
+    }
   }
 
+
   Future<void> _deleteAllRecords() async {
-    await _databaseHelper.deleteAllRecords(); // Added this
-    _loadRecords();
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete All Records'),
+        content: const Text('Are you sure you want to delete all records? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await _databaseHelper.deleteAllRecords();
+      _loadRecords();
+    }
   }
 
   @override
@@ -114,29 +154,23 @@ class _RecordsScreenState extends State<RecordsScreen> {
                                     width: 100,
                                     height: 100,
                                     color: Colors.grey[300],
-                                    child:
-                                    const Center(child: Text('No Image')),
+                                    child: const Center(child: Text('No Image')),
                                   ),
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text('Record - ${record.id}'),
-                                      Text(
-                                          'Classification: ${record.classification}'),
-                                      Text(
-                                          'Date: ${DateFormat('MMMM d yyyy, h:mm a').format(record.date)}'),
+                                      Text('Classification: ${record.classification}'),
+                                      Text('Date: ${DateFormat('MMMM d yyyy, h:mm a').format(record.date)}'),
                                       Text('Note: ${record.note}'),
                                     ],
                                   ),
                                 ),
                                 IconButton(
-                                  // Delete button for each record
                                   onPressed: () => _deleteRecord(record.id!),
-                                  icon: const Icon(Icons.delete,
-                                      color: Colors.red),
+                                  icon: const Icon(Icons.delete, color: Colors.red),
                                 ),
                               ],
                             ),

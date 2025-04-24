@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:paddy_scan/util/detection/rice_mobnet_detector.dart';
 import 'package:paddy_scan/util/detection/rice_status_mobnet_detector.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as path;
 import 'package:provider/provider.dart';
 import '../appstate.dart';
 import 'package:image/image.dart' as img;
@@ -19,7 +17,7 @@ class ScanScreen extends StatefulWidget {
 class _ScanScreenState extends State<ScanScreen> {
   File? _image;
   final picker = ImagePicker();
-  String? _imagePath; // Store the image path
+  String? _imagePath;
   RiceMobnetDetector detector = RiceMobnetDetector();
   List<Map<String, dynamic>> _rice_detections = [];
   RiceStatusMobnetDetector riceStatusDetector = RiceStatusMobnetDetector();
@@ -40,9 +38,8 @@ class _ScanScreenState extends State<ScanScreen> {
                 leading: const Icon(Icons.camera),
                 title: const Text("Take a Photo"),
                 onTap: () async {
-                  Navigator.pop(context); // Close dialog
-                  final pickedFile =
-                      await picker.pickImage(source: ImageSource.camera);
+                  Navigator.pop(context);
+                  final pickedFile = await picker.pickImage(source: ImageSource.camera);
                   _handleImageSelection(pickedFile);
                 },
               ),
@@ -50,9 +47,8 @@ class _ScanScreenState extends State<ScanScreen> {
                 leading: const Icon(Icons.photo_library),
                 title: const Text("Choose from Gallery"),
                 onTap: () async {
-                  Navigator.pop(context); // Close dialog
-                  final pickedFile =
-                      await picker.pickImage(source: ImageSource.gallery);
+                  Navigator.pop(context);
+                  final pickedFile = await picker.pickImage(source: ImageSource.gallery);
                   _handleImageSelection(pickedFile);
                 },
               ),
@@ -68,51 +64,28 @@ class _ScanScreenState extends State<ScanScreen> {
       setState(() {
         _image = File(pickedFile.path);
         _imagePath = pickedFile.path;
-        _saveImagePath(_imagePath!);
       });
     } else {
       print('No image selected.');
     }
   }
 
-  Future<void> _saveImagePath(String imagePath) async {
-    final directory = await getApplicationDocumentsDirectory();
-    final filePath = path.join(directory.path, 'last_image_path.txt');
-    final file = File(filePath);
-    await file.writeAsString(imagePath);
-  }
-
-  Future<String?> _getLastImagePath() async {
-    try {
-      final directory = await getApplicationDocumentsDirectory();
-      final filePath = path.join(directory.path, 'last_image_path.txt');
-      final file = File(filePath);
-      return await file.readAsString();
-    } catch (e) {
-      return null; // Handle file not found or other errors
-    }
-  }
-
   @override
   void initState() {
     super.initState();
-    _loadLastImagePath();
     _loadModel();
+  }
+
+  @override
+  void dispose() {
+    _image = null;
+    _imagePath = null;
+    super.dispose();
   }
 
   Future<void> _loadModel() async {
     await detector.loadModel();
     await riceStatusDetector.loadModel();
-  }
-
-  Future<void> _loadLastImagePath() async {
-    final savedPath = await _getLastImagePath();
-    if (savedPath != null) {
-      setState(() {
-        _image = File(savedPath);
-        _imagePath = savedPath;
-      });
-    }
   }
 
   Future<void> _processRiceImage() async {
@@ -141,8 +114,7 @@ class _ScanScreenState extends State<ScanScreen> {
 
         print('Rice Detection is not Empty: ${_rice_detections.first}');
         print('Rice Detection: ${result['label']}');
-        print(
-            'Rice Detection Confidence: ${(result['confidence'] * 100).toStringAsFixed(2)}%');
+        print('Rice Detection Confidence: ${(result['confidence'] * 100).toStringAsFixed(2)}%');
       });
     } else {
       print('Rice Detection is Empty: ${_rice_detections.isEmpty}');
@@ -167,22 +139,19 @@ class _ScanScreenState extends State<ScanScreen> {
 
     _rice_status_detections.isNotEmpty
         ? _rice_status_detections.map((result) {
-            setState(() {
-              _current_rice_classification = result['label'];
-            });
-            print('Rice Status Detection: ${result['label']}');
-            print(
-                'Rice Status Detection Confidence: ${(result['confidence'] * 100).toStringAsFixed(2)}%');
-          }).toList()
-        : print(
-            'Rice Status Detection is Empty: ${_rice_status_detections.isEmpty}');
+      setState(() {
+        _current_rice_classification = result['label'];
+      });
+      print('Rice Status Detection: ${result['label']}');
+      print('Rice Status Detection Confidence: ${(result['confidence'] * 100).toStringAsFixed(2)}%');
+    }).toList()
+        : print('Rice Status Detection is Empty: ${_rice_status_detections.isEmpty}');
   }
 
   void _resetImage() {
     setState(() {
       _image = null;
       _imagePath = null;
-      _saveImagePath(''); // Clear the saved path
     });
   }
 
@@ -234,79 +203,80 @@ class _ScanScreenState extends State<ScanScreen> {
         backgroundColor: const Color(0xFFF5F5DC),
         title: const Text('Scan', style: TextStyle(color: Colors.green)),
         elevation: 0.0,
+        leading: BackButton(
+          onPressed: () {
+            Navigator.pushReplacementNamed(context, '/');
+          },
+        ),
       ),
-    body: GestureDetector(
-    onTap: getImage, // Tap anywhere to trigger image selection
-    child: Container(
-    color: Colors.grey[300],
-    width: double.infinity,
-    height: double.infinity, // Ensure the entire screen is tappable
-    child: Center(
-    child: Column(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: <Widget>[
-    GestureDetector(
-    onTap: _image != null ? _resetImage : getImage, // Tap on image area
-    child: _image == null
-    ? Image.asset('assets/images/TapToOpenCam.png', height: 500)
-        : Image.file(_image!, height: 500, fit: BoxFit.fitHeight),
-    ),
-    const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _image != null
-                    ? () async {
-                        if (_isLoading) return;
-                        _setLoading();
-                        appState.currentImagePath = _imagePath!;
 
-                        Future.delayed(Duration(milliseconds: 1000), () async {
-                          await _processRiceImage();
+      body: GestureDetector(
+        onTap: getImage,
+        child: Container(
+          color: Colors.grey[300],
+          width: double.infinity,
+          height: double.infinity,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                GestureDetector(
+                  onTap: _image != null ? _resetImage : getImage,
+                  child: _image == null
+                      ? Image.asset('assets/images/TapToOpenCam.png', height: 500)
+                      : Image.file(_image!, height: 500, fit: BoxFit.fitHeight),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _image != null
+                      ? () async {
+                    if (_isLoading) return;
+                    _setLoading();
+                    appState.currentImagePath = _imagePath!;
 
-                          if (_isRice) {
-                            await _processRiceStatusImage();
-                          }
+                    Future.delayed(Duration(milliseconds: 1000), () async {
+                      await _processRiceImage();
 
-                          if (_current_rice_classification.isNotEmpty) {
-                            appState.currentImageClassification =
-                                _current_rice_classification;
-                            _setLoading();
-                            Navigator.pushNamed(context, '/scan_result');
-                          } else {
-                            print("No classification detected.");
-                            appState.currentImageClassification = _current_rice;
-                            Navigator.pushNamed(context, '/scan_result');
-                          }
-                        });
+                      if (_isRice) {
+                        await _processRiceStatusImage();
                       }
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                  textStyle: const TextStyle(fontSize: 20),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+
+                      if (_current_rice_classification.isNotEmpty) {
+                        appState.currentImageClassification = _current_rice_classification;
+                        _setLoading();
+                        Navigator.pushNamed(context, '/scan_result');
+                      } else {
+                        print("No classification detected.");
+                        appState.currentImageClassification = _current_rice;
+                        Navigator.pushNamed(context, '/scan_result');
+                      }
+                    });
+                  }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                    textStyle: const TextStyle(fontSize: 20),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
+                  child: const Text('Scan', style: TextStyle(color: Colors.white)),
                 ),
-                child:
-                    const Text('Scan', style: TextStyle(color: Colors.white)),
-              ),
-              if (_imagePath != null) // Display the file path
-                Padding(
-                  padding: const EdgeInsets.only(top: 16.0),
-                  child: Text(
-                    'Image Path: $_imagePath',
-                    style: const TextStyle(fontSize: 12),
-                    textAlign: TextAlign.center,
+                if (_imagePath != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16.0),
+                    child: Text(
+                      'Image Path: $_imagePath',
+                      style: const TextStyle(fontSize: 12),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    )
     );
-
-
   }
 }
