@@ -5,11 +5,6 @@ import '../appstate.dart'; // Import your AppState
 class ScanResultScreen extends StatelessWidget {
   const ScanResultScreen({super.key});
 
-  // static const List<String> classifications = [
-  //   'Healthy',
-  //   'Rice Blast',
-  //   'Sheath Blight'
-  // ];
 
   @override
   Widget build(BuildContext context) {

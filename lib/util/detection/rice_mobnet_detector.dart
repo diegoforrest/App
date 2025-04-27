@@ -8,25 +8,15 @@ class RiceMobnetDetector {
   List<String> _labels = [];
 
   Future<void> loadModel() async {
-   //  _interpreter = await Interpreter.fromAsset(
-     //    'assets/models/rice_model/rice_mobnetv2_model.tflite');
-   // _interpreter = await Interpreter.fromAsset(
-    //    'assets/models/rice_model/rice_inception_model.tflite');
-   //  _interpreter = await Interpreter.fromAsset(
-   //      'assets/models/rice_model/rice_cnn_model.tflite');
-   //  _interpreter = await Interpreter.fromAsset(
-    //     'assets/models/rice_model/rice_dense_net_model.tflite');
-    // _interpreter = await Interpreter.fromAsset(
-    //     'assets/models/rice_model/rice_vgg_model.tflite');
-     _interpreter = await Interpreter.fromAsset(
-         'assets/models/rice_model/rice_Xception_model.tflite');
+    _interpreter = await Interpreter.fromAsset(
+        'assets/models/rice_model/rice_Xception_model.tflite');
 
     final labelsData =
-        await rootBundle.loadString('assets/models/rice_model/rice_label.txt');
+    await rootBundle.loadString('assets/models/rice_model/rice_label.txt');
     _labels =
         labelsData.split('\n').where((label) => label.isNotEmpty).toList();
     _labels.map(
-      (result) {
+          (result) {
         print("Rice Label: ${result}");
       },
     ).toList();

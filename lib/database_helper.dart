@@ -51,7 +51,7 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     final databasesPath = await getDatabasesPath();
-    final path = join(databasesPath, 'paddy_scan.db');
+    final path = join(databasesPath, 'paddy_scan_final.db');
 
     return openDatabase(path, version: 1, onCreate: _createDb);
   }
