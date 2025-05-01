@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import '../database_helper.dart';
 import 'dart:io';
 import 'package:photo_view/photo_view.dart';
+import '../pdf_generator.dart';
+import 'package:open_filex/open_filex.dart';
 
 class RecordsScreen extends StatefulWidget {
   const RecordsScreen({super.key});
@@ -17,16 +19,26 @@ class _RecordsScreenState extends State<RecordsScreen> {
   late Future<List<Record>> _recordsFuture;
   final DatabaseHelper _databaseHelper = DatabaseHelper();
   FilterOption _selectedFilter = FilterOption.Most_Recent;
+  List<FileSystemEntity> _pdfFiles = [];
 
   @override
   void initState() {
     super.initState();
     _loadRecords();
+    _loadPDFs();
   }
 
   Future<void> _loadRecords() async {
     _recordsFuture = _databaseHelper.getRecords();
     setState(() {});
+  }
+
+  Future<void> _loadPDFs() async {
+    final pdfs = await PDFGenerator().getGeneratedPDFs();
+    pdfs.sort((a, b) => b.statSync().modified.compareTo(a.statSync().modified));
+    setState(() {
+      _pdfFiles = pdfs;
+    });
   }
 
   List<Record> _filterRecords(List<Record> records) {
@@ -101,13 +113,13 @@ class _RecordsScreenState extends State<RecordsScreen> {
       builder: (context) {
         return Dialog(
           insetPadding: const EdgeInsets.all(10),
-          backgroundColor: Colors.transparent,  // Make the dialog background transparent
+          backgroundColor: Colors.transparent,
           child: Stack(
             children: [
               PhotoView(
                 imageProvider: FileImage(File(imagePath)),
                 backgroundDecoration: const BoxDecoration(
-                  color: Colors.transparent,  // Make the image background transparent
+                  color: Colors.transparent,
                 ),
                 minScale: PhotoViewComputedScale.contained * 1,
                 maxScale: PhotoViewComputedScale.covered * 3,
@@ -127,7 +139,6 @@ class _RecordsScreenState extends State<RecordsScreen> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -138,6 +149,98 @@ class _RecordsScreenState extends State<RecordsScreen> {
           IconButton(
             onPressed: _deleteAllRecords,
             icon: const Icon(Icons.delete_forever, color: Colors.red),
+          ),
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf),
+            tooltip: 'Generate PDF',
+            onPressed: () async {
+              final records = await _databaseHelper.getRecords();
+              final pdfFile = await PDFGenerator().generatePDF(records);
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text('PDF saved: ${pdfFile.path}'),
+              ));
+              await _loadPDFs();
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.folder),
+            tooltip: 'View PDFs',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return StatefulBuilder(
+                    builder: (context, setState) => AlertDialog(
+                      title: const Text('Downloaded PDFs'),
+                      content: SizedBox(
+                        width: double.maxFinite,
+                        child: ListView.builder(
+                          itemCount: _pdfFiles.length,
+                          itemBuilder: (context, index) {
+                            final file = _pdfFiles[index];
+                            return ListTile(
+                              title: Text(file.path.split('/').last),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.open_in_new),
+                                    onPressed: () async {
+                                      final result = await OpenFilex.open(file.path);
+                                      if (result.type != ResultType.done) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Could not open PDF: ${result.message}')),
+                                        );
+                                      }
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () async {
+                                      // Ask the user for confirmation before deleting the PDF
+                                      final confirm = await showDialog<bool>(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: const Text('Delete PDF'),
+                                          content: const Text('Are you sure you want to delete this PDF?'),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.of(context).pop(false),
+                                              child: const Text('Cancel'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () => Navigator.of(context).pop(true),
+                                              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+
+                                      if (confirm == true) {
+                                        await file.delete();
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Deleted PDF: ${file.path.split('/').last}')),
+                                        );
+                                        final updatedPDFs = await PDFGenerator().getGeneratedPDFs();
+                                        updatedPDFs.sort((a, b) =>
+                                            b.statSync().modified.compareTo(a.statSync().modified));
+                                        setState(() {
+                                          _pdfFiles = updatedPDFs;
+                                        });
+                                      }
+                                    },
+                                  )
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
           ),
         ],
       ),
@@ -156,11 +259,7 @@ class _RecordsScreenState extends State<RecordsScreen> {
               items: FilterOption.values.map((filter) {
                 return DropdownMenuItem<FilterOption>(
                   value: filter,
-                  child: Text(filter
-                      .toString()
-                      .split('.')
-                      .last
-                      .replaceAll('_', ' ')),
+                  child: Text(filter.toString().split('.').last.replaceAll('_', ' ')),
                 );
               }).toList(),
             ),
@@ -183,8 +282,7 @@ class _RecordsScreenState extends State<RecordsScreen> {
                               children: [
                                 if (record.pathToImage.isNotEmpty)
                                   GestureDetector(
-                                    onTap: () =>
-                                        _showFullImage(record.pathToImage),
+                                    onTap: () => _showFullImage(record.pathToImage),
                                     child: Image.file(
                                       File(record.pathToImage),
                                       width: 100,
@@ -197,29 +295,22 @@ class _RecordsScreenState extends State<RecordsScreen> {
                                     width: 100,
                                     height: 100,
                                     color: Colors.grey[300],
-                                    child:
-                                    const Center(child: Text('No Image')),
+                                    child: const Center(child: Text('No Image')),
                                   ),
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text('Record - ${record.id}'),
-                                      Text(
-                                          'Classification: ${record.classification}'),
-                                      Text(
-                                          'Date: ${DateFormat('MMMM d yyyy, h:mm a').format(record.date)}'),
-                                      Text('Note: ${record.note}'),
+                                      Text('Classification: ${record.classification}'),
+                                      Text('Date: ${DateFormat('yyyy-MM-dd').format(record.date)}'),
                                     ],
                                   ),
                                 ),
                                 IconButton(
-                                  onPressed: () =>
-                                      _deleteRecord(record.id!),
-                                  icon: const Icon(Icons.delete,
-                                      color: Colors.red),
+                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () => _deleteRecord(record.id!),
                                 ),
                               ],
                             ),
@@ -229,9 +320,8 @@ class _RecordsScreenState extends State<RecordsScreen> {
                     );
                   } else if (snapshot.hasError) {
                     return Center(child: Text('Error: ${snapshot.error}'));
-                  } else {
-                    return const Center(child: CircularProgressIndicator());
                   }
+                  return const Center(child: CircularProgressIndicator());
                 },
               ),
             ),
