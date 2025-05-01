@@ -1,4 +1,4 @@
-# PaddyScan:A mobile application for Offline image based detection of rice disease detection #
+# PaddyScan: A mobile application for Offline image based detection of rice disease detection #
 Rice plants are vital in global food security, providing sustenance for many of the world's population.
 Its resilience across different environments ensures its importance in agriculture. Beyond its nutritional value, rice drives economies and cultural practices,
 offering livelihoods and shaping traditions. As a symbol of adaptability, it highlights the capacity of agricultural systems to meet the challenges of growing populations.

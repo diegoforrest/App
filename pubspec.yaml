@@ -29,7 +29,10 @@ dependencies:
   sqflite: ^2.2.8+4
   intl: ^0.18.1
 
-
+# Recods dart imports
+  photo_view: ^0.14.0
+  pdf: ^3.11.3
+  open_filex: ^4.7.0
 
 # loaded model imports
   tflite_flutter: ^0.11.0

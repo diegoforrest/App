@@ -1,26 +1,23 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../appstate.dart'; // Import your AppState
+import '../appstate.dart';
 
 class ScanResultScreen extends StatelessWidget {
   const ScanResultScreen({super.key});
 
-
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
-
-    // String randomClassification =
-    //     classifications[Random().nextInt(classifications.length)];
-    String currentClassification =
-        appState.currentImageClassification; // Update AppState
+    final currentClassification = appState.currentImageClassification;
+    final imagePath = appState.currentImagePath;
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.green, // Green app bar
+        backgroundColor: Colors.green,
         title: const Text(
           'Result',
-          style: TextStyle(color: Colors.white), // White text
+          style: TextStyle(color: Colors.white),
         ),
         leading: BackButton(
           onPressed: () {
@@ -31,20 +28,26 @@ class ScanResultScreen extends StatelessWidget {
         elevation: 0,
       ),
       body: Container(
-        color: Colors.white, // White background
+        color: Colors.white,
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Image.asset(
-                'assets/images/PaddyScanned.png', // Your image asset
-                height: 200, // Adjust height as needed
-              ),
-              const SizedBox(height: 40),
+              if (imagePath.isNotEmpty && File(imagePath).existsSync())
+                Image.file(
+                  File(imagePath),
+                  height: 400,
+                  fit: BoxFit.cover,
+                )
+              else
+                Image.asset(
+                  'assets/images/PaddyScanned.png',
+                  height: 400,
+                ),
+              const SizedBox(height: 20),
               Text(
-                currentClassification, // Display randomized classification
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                currentClassification,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
@@ -53,8 +56,7 @@ class ScanResultScreen extends StatelessWidget {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                   textStyle: const TextStyle(fontSize: 18),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -69,13 +71,10 @@ class ScanResultScreen extends StatelessWidget {
               ElevatedButton(
                 onPressed: () {
                   Navigator.pushNamed(context, '/scan');
-
-                  // Handle "Scan Again" action (e.g., navigate back)
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                   textStyle: const TextStyle(fontSize: 18),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
