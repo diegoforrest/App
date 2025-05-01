@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'screens/home_screen.dart';
-import 'scan_screen2.dart';
+import 'screens/scan_screen.dart';
 import 'screens/scan_result_screen.dart';
 import 'screens/save_to_records_screen.dart';
 import 'screens/records_screen.dart';

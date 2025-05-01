@@ -68,7 +68,6 @@ class PDFGenerator {
       ),
     );
 
-    // (optionally add your "I love you" page, etc.)
 
     final dir = await getApplicationDocumentsDirectory();
     final file = File('${dir.path}/$filename');

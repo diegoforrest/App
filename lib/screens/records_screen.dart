@@ -171,7 +171,7 @@ class _RecordsScreenState extends State<RecordsScreen> {
                 builder: (context) {
                   return StatefulBuilder(
                     builder: (context, setState) => AlertDialog(
-                      title: const Text('Downloaded PDFs'),
+                      title: const Text('PaddyScan PDFs'),
                       content: SizedBox(
                         width: double.maxFinite,
                         child: ListView.builder(

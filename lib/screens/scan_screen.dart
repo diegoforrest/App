@@ -4,7 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:paddy_scan_final/util/detection/rice_mobnet_detector.dart';
 import 'package:paddy_scan_final/util/detection/rice_status_mobnet_detector.dart';
 import 'package:provider/provider.dart';
-import '../appstate.dart';
+import 'package:paddy_scan_final/appstate.dart';
 import 'package:image/image.dart' as img;
 
 class ScanScreen extends StatefulWidget {
@@ -88,7 +88,6 @@ class _ScanScreenState extends State<ScanScreen> {
     await riceStatusDetector.loadModel();
   }
 
-
   Future<void> _processRiceImage() async {
     if (_image == null) return;
     final bytes = await _image!.readAsBytes();
@@ -115,8 +114,7 @@ class _ScanScreenState extends State<ScanScreen> {
 
         print('Rice Detection is not Empty: ${_rice_detections.first}');
         print('Rice Detection: ${result['label']}');
-        print(
-            'Rice Detection Confidence: ${(result['confidence'] * 100).toStringAsFixed(2)}%');
+        print('Rice Detection Confidence: ${(result['confidence'] * 100).toStringAsFixed(2)}%');
       });
     } else {
       print('Rice Detection is Empty: ${_rice_detections.isEmpty}');
@@ -145,11 +143,9 @@ class _ScanScreenState extends State<ScanScreen> {
         _current_rice_classification = result['label'];
       });
       print('Rice Status Detection: ${result['label']}');
-      print(
-          'Rice Status Detection Confidence: ${(result['confidence'] * 100).toStringAsFixed(2)}%');
+      print('Rice Status Detection Confidence: ${(result['confidence'] * 100).toStringAsFixed(2)}%');
     }).toList()
-        : print(
-        'Rice Status Detection is Empty: ${_rice_status_detections.isEmpty}');
+        : print('Rice Status Detection is Empty: ${_rice_status_detections.isEmpty}');
   }
 
   void _resetImage() {
@@ -203,7 +199,7 @@ class _ScanScreenState extends State<ScanScreen> {
     final appState = Provider.of<AppState>(context);
 
     return Scaffold(
-        appBar: AppBar(
+      appBar: AppBar(
         backgroundColor: const Color(0xFFF5F5DC),
         title: const Text('Scan', style: TextStyle(color: Colors.green)),
         elevation: 0.0,
@@ -214,76 +210,73 @@ class _ScanScreenState extends State<ScanScreen> {
         ),
       ),
 
-    body: GestureDetector(
-      onTap: getImage,
-      child: Container(
-        color: Colors.grey[300],
-        width: double.infinity,
-        height: double.infinity,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              GestureDetector(
-                onTap: _image != null ? _resetImage : getImage,
-                child: _image == null
-                  ? Image.asset('assets/images/TapToOpenCam.png', height: 500)
-                  : Image.file(_image!, height: 500, fit: BoxFit.fitHeight),
+      body: GestureDetector(
+        onTap: getImage,
+        child: Container(
+          color: Colors.grey[300],
+          width: double.infinity,
+          height: double.infinity,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                GestureDetector(
+                  onTap: _image != null ? _resetImage : getImage,
+                  child: _image == null
+                      ? Image.asset('assets/images/TapToOpenCam.png', height: 500)
+                      : Image.file(_image!, height: 500, fit: BoxFit.fitHeight),
                 ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _image != null
-                    ? () async {
-                  if (_isLoading) return;
-                  _setLoading();
-                  appState.currentImagePath = _imagePath!;
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _image != null
+                      ? () async {
+                    if (_isLoading) return;
+                    _setLoading();
+                    appState.currentImagePath = _imagePath!;
 
-                  Future.delayed(Duration(milliseconds: 1000), () async {
-                    await _processRiceImage();
+                    Future.delayed(Duration(milliseconds: 1000), () async {
+                      await _processRiceImage();
 
-                    if (_isRice) {
-                      await _processRiceStatusImage();
-                    }
+                      if (_isRice) {
+                        await _processRiceStatusImage();
+                      }
 
-                    if (_current_rice_classification.isNotEmpty) {
-                      appState.currentImageClassification =
-                          _current_rice_classification;
-                      _setLoading();
-                      Navigator.pushNamed(context, '/scan_result');
-                    } else {
-                      print("No classification detected.");
-                      appState.currentImageClassification = _current_rice;
-                      Navigator.pushNamed(context, '/scan_result');
-                    }
-                  });
-                }
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                  textStyle: const TextStyle(fontSize: 20),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                      if (_current_rice_classification.isNotEmpty) {
+                        appState.currentImageClassification = _current_rice_classification;
+                        _setLoading();
+                        Navigator.pushNamed(context, '/scan_result');
+                      } else {
+                        print("No classification detected.");
+                        appState.currentImageClassification = _current_rice;
+                        Navigator.pushNamed(context, '/scan_result');
+                      }
+                    });
+                  }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                    textStyle: const TextStyle(fontSize: 20),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
+                  child: const Text('Scan', style: TextStyle(color: Colors.white)),
                 ),
-                child:
-                const Text('Scan', style: TextStyle(color: Colors.white)),
-              ),
-              if (_imagePath != null) // Display the file path
-                Padding(
-                  padding: const EdgeInsets.only(top: 16.0),
-                  child: Text(
-                    'Image Path: $_imagePath',
-                    style: const TextStyle(fontSize: 12),
-                    textAlign: TextAlign.center,
+                if (_imagePath != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16.0),
+                    child: Text(
+                      'Image Path: $_imagePath',
+                      style: const TextStyle(fontSize: 12),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
     );
   }
 }
