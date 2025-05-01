@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../database_helper.dart';
 import 'dart:io';
+import 'package:photo_view/photo_view.dart';
 
 class RecordsScreen extends StatefulWidget {
   const RecordsScreen({super.key});
@@ -42,6 +43,7 @@ class _RecordsScreenState extends State<RecordsScreen> {
     }
     return records;
   }
+
   Future<void> _deleteRecord(int id) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -63,17 +65,17 @@ class _RecordsScreenState extends State<RecordsScreen> {
 
     if (confirm == true) {
       await _databaseHelper.deleteRecord(id);
-      _loadRecords(); // Refresh the record list
+      _loadRecords();
     }
   }
-
 
   Future<void> _deleteAllRecords() async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete All Records'),
-        content: const Text('Are you sure you want to delete all records? This action cannot be undone.'),
+        content: const Text(
+            'Are you sure you want to delete all records? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -93,6 +95,39 @@ class _RecordsScreenState extends State<RecordsScreen> {
     }
   }
 
+  void _showFullImage(String imagePath) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          insetPadding: const EdgeInsets.all(10),
+          backgroundColor: Colors.transparent,  // Make the dialog background transparent
+          child: Stack(
+            children: [
+              PhotoView(
+                imageProvider: FileImage(File(imagePath)),
+                backgroundDecoration: const BoxDecoration(
+                  color: Colors.transparent,  // Make the image background transparent
+                ),
+                minScale: PhotoViewComputedScale.contained * 1,
+                maxScale: PhotoViewComputedScale.covered * 3,
+              ),
+              Positioned(
+                top: 80,
+                right: 20,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -101,7 +136,7 @@ class _RecordsScreenState extends State<RecordsScreen> {
         title: const Text('Records', style: TextStyle(color: Colors.black)),
         actions: [
           IconButton(
-            onPressed: _deleteAllRecords, // Call delete all function
+            onPressed: _deleteAllRecords,
             icon: const Icon(Icons.delete_forever, color: Colors.red),
           ),
         ],
@@ -121,7 +156,11 @@ class _RecordsScreenState extends State<RecordsScreen> {
               items: FilterOption.values.map((filter) {
                 return DropdownMenuItem<FilterOption>(
                   value: filter,
-                  child: Text(filter.toString().split('.').last.replaceAll('_', ' ')),
+                  child: Text(filter
+                      .toString()
+                      .split('.')
+                      .last
+                      .replaceAll('_', ' ')),
                 );
               }).toList(),
             ),
@@ -143,34 +182,44 @@ class _RecordsScreenState extends State<RecordsScreen> {
                             child: Row(
                               children: [
                                 if (record.pathToImage.isNotEmpty)
-                                  Image.file(
-                                    File(record.pathToImage),
-                                    width: 100,
-                                    height: 100,
-                                    fit: BoxFit.cover,
+                                  GestureDetector(
+                                    onTap: () =>
+                                        _showFullImage(record.pathToImage),
+                                    child: Image.file(
+                                      File(record.pathToImage),
+                                      width: 100,
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                    ),
                                   )
                                 else
                                   Container(
                                     width: 100,
                                     height: 100,
                                     color: Colors.grey[300],
-                                    child: const Center(child: Text('No Image')),
+                                    child:
+                                    const Center(child: Text('No Image')),
                                   ),
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                    CrossAxisAlignment.start,
                                     children: [
                                       Text('Record - ${record.id}'),
-                                      Text('Classification: ${record.classification}'),
-                                      Text('Date: ${DateFormat('MMMM d yyyy, h:mm a').format(record.date)}'),
+                                      Text(
+                                          'Classification: ${record.classification}'),
+                                      Text(
+                                          'Date: ${DateFormat('MMMM d yyyy, h:mm a').format(record.date)}'),
                                       Text('Note: ${record.note}'),
                                     ],
                                   ),
                                 ),
                                 IconButton(
-                                  onPressed: () => _deleteRecord(record.id!),
-                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () =>
+                                      _deleteRecord(record.id!),
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.red),
                                 ),
                               ],
                             ),
